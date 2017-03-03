@@ -782,6 +782,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("razor"            . ("play" "play2"))
     ("riot"             . ())
     ("template-toolkit" . ())
+    ("sharepoint"       . ())
     ("smarty"           . ())
     ("thymeleaf"        . ())
     ("underscore"       . ("underscore.js"))
@@ -1076,6 +1077,8 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("php"              . (("<?p" . "hp | ?>")
                            ("<? " . " ?>")
                            ("<?=" . "?>")))
+    ("sharepoint"       . (("<!--#_ " . " _#-->")
+                           ("_#= " . " =#_")))
     ("template-toolkit" . (("[% " . " %]")
                            ("[%-" . " | %]")
                            ("[%#" . " | %]")))
@@ -1159,6 +1162,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("python"           . "<\\?")
    '("razor"            . "@.\\|^[ \t]*}")
    '("riot"             . "{.")
+   '("sharepoint"       ' "<!--#_\\|_#=")
    '("smarty"           . "{[[:alpha:]#$/*\"]")
    '("template-toolkit" . "\\[%.\\|%%#")
    '("underscore"       . "<%")
@@ -2083,6 +2087,18 @@ shouldn't be moved back.)")
     '("@\\([[:alpha:]_]+\\)" (1 'web-mode-block-control-face)))
    web-mode-php-font-lock-keywords))
 
+
+(defvar web-mode-sharepoint-font-lock-keywords
+  (list
+   (cons (concat "\\_<\\(" web-mode-javascript-keywords "\\)\\_>") '(0 'web-mode-keyword-face))
+   '("\\_<\\(_\.[[:alpha:]]+\\)(" 1 'web-mode-function-call-face)
+   '("\\_<new \\([[:alnum:]_.]+\\)\\_>" 1 'web-mode-type-face)
+   '("\\_<\\([[:alnum:]_]+\\):[ ]*function[ ]*(" 1 'web-mode-function-name-face)
+   '("\\_<\\(var\\)\\_>[ ]+\\([[:alnum:]_]+\\)"
+     (1 'web-mode-keyword-face)
+     (2 'web-mode-variable-name-face))
+   ))
+
 (defvar web-mode-engines-font-lock-keywords
   '(("angular"          . web-mode-angular-font-lock-keywords)
     ("blade"            . web-mode-blade-font-lock-keywords)
@@ -2102,6 +2118,7 @@ shouldn't be moved back.)")
     ("python"           . web-mode-python-font-lock-keywords)
     ("razor"            . web-mode-razor-font-lock-keywords)
     ("riot"             . web-mode-riot-font-lock-keywords)
+    ("sharepoint"       . web-mode-sharepoint-font-lock-keywords)
     ("smarty"           . web-mode-smarty-font-lock-keywords)
     ("template-toolkit" . web-mode-template-toolkit-font-lock-keywords)
     ("underscore"       . web-mode-underscore-font-lock-keywords)
@@ -2876,6 +2893,19 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                 delim-close "%>")
           ) ;underscore
 
+         ((string= web-mode-engine "sharepoint")
+          (cond
+           ((string= tagopen "<!--#_")
+            (setq closing-string "_#-->"))
+           ((string= tagopen "_#=")
+            (setq closing-string "=#_"))
+           (t
+            (setq closing-string "_#-->"
+                  delim-open "<!--#_"
+                  delin-close "_#-->")
+            ))
+          ) ;sharepoint
+         
          ((string= web-mode-engine "template-toolkit")
           (cond
            ((string= tagopen "%%#")
@@ -3407,6 +3437,10 @@ another auto-completion with different ac-sources (e.g. ac-php)")
        )
       ) ;erb
 
+     ((string= web-mode-engine "sharepoint")
+      (setq regexp "/\\*\\|\"\\|'")
+      ) ; sharepoint
+     
      ((string= web-mode-engine "template-toolkit")
       (cond
        ((member sub3 '("[%#" "%%#"))
@@ -10451,6 +10485,7 @@ Prompt user if TAG-NAME isn't provided."
    ((string= web-mode-engine "smarty")    (concat "{/" type "}"))
    ((string= web-mode-engine "xoops")     (concat "<{/" type "}>"))
    ((string= web-mode-engine "underscore")        "<% } %>")
+   ((string= web-mode-engine "sharepoint")        "<!--#_ } _#-->")
    ((string= web-mode-engine "lsp")               "<% ) %>")
    ((string= web-mode-engine "erb")               "<% } %>")
    ((string= web-mode-engine "erb")               "<% end %>")
